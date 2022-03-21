@@ -31,7 +31,7 @@ from ducktape.tests.serde import SerDe
 from ducktape.tests.status import FLAKY, TestStatus
 from ducktape.tests.test import Test, test_logger, TestContext
 
-from ducktape.tests.result import TestResult, IGNORE, PASS, FAIL
+from ducktape.tests.result import TestResult, IGNORE, PASS, FAIL, OPASS, OFAIL
 from ducktape.utils.local_filesystem_utils import mkdir_p
 
 
@@ -340,13 +340,22 @@ class RunnerClient(object):
             # Run the test unit
             self.setup_test()
             data = self.run_test()
-            test_status = PASS
+            if self.test_context.ok_to_fail:
+                test_status = OPASS
+            else:
+                test_status = PASS
 
         except BaseException as e:
             # mark the test as failed before doing anything else
-            test_status = FAIL
-            err_trace = self._exc_msg(e)
-            summary.extend(err_trace.split('\n'))
+            if self.test_context.ok_to_fail:
+                test_status = OFAIL
+                err_trace = self._exc_msg(e)
+                summary.extend(err_trace.split('\n'))
+            else:
+                # mark the test as failed before doing anything else
+                test_status = FAIL
+                err_trace = self._exc_msg(e)
+                summary.extend(err_trace.split('\n'))
 
         finally:
             for service in self.test_context.services:
@@ -380,8 +389,10 @@ class RunnerClient(object):
                 # only check node utilization on test pass
                 if result == PASS or result == FLAKY:
                     self.log(logging.INFO, "FAIL: " + message)
-
-                result = FAIL
+                    result = FAIL
+                elif result == OPASS:
+                    self.log(logging.INFO, "OFAIL: " + message)
+                    result = OFAIL
                 summary.append(message)
             else:
                 self.log(logging.WARN, message)
