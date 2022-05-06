@@ -19,6 +19,9 @@ from ducktape.mark import ignore, parametrize
 from ducktape.mark.resource import cluster
 
 
+_flake = False
+
+
 class TestThingy(Test):
     """Fake ducktape test class"""
 
@@ -43,6 +46,11 @@ class TestThingy(Test):
 
     def test_failure(self):
         raise Exception("This failed")
+
+    def test_flaky(self):
+        global _flake
+        flake, _flake = _flake, not _flake
+        assert flake
 
 
 class ClusterTestThingy(Test):
