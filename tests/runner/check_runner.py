@@ -204,8 +204,8 @@ class CheckRunner(object):
 =======
         assert len(results) == 4
         assert results.num_flaky == 0
-        assert results.num_failed == 1
-        assert results.num_passed == 1
+        assert results.num_failed == 2
+        assert results.num_passed == 0
         assert results.num_ignored == 2
 >>>>>>> ea51045 (Add deflake feature to Ducktape (#299))
 
