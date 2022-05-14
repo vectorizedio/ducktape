@@ -32,14 +32,7 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 
-test_req = [
-    'pytest==4.6.5',
-    'mock==3.0.5',
-    'psutil==5.6.3',
-    'memory_profiler==0.55',
-    'statistics==1.0.3.5',
-    'requests-testadapter==0.3.0'
-]
+test_req = open('requirements-test.txt').read()
 
 setup(name="ducktape",
       version=version,
@@ -54,37 +47,9 @@ setup(name="ducktape",
       packages=find_packages(),
       package_data={'ducktape': ['templates/report/*']},
       python_requires='>= 3.6',
-      install_requires=['jinja2==2.11.2',
-                        'boto3==1.26.62',
-                        # jinja2 pulls in MarkupSafe with a > constraint, but we need to constrain it for compatibility
-                        'MarkupSafe<2.0.0',
-                        'pyparsing<3.0.0',
-                        'zipp<2.0.0',
-                        'pywinrm==0.2.2',
-                        'requests==2.24.0',
-                        'paramiko~=2.11.0',
-                        'pyzmq==19.0.2',
-                        'pycryptodome==3.9.8',
-                        # > 5.0 drops py27 support
-                        'more-itertools==5.0.0',
-                        'six==1.12.0',
-                        # for the following packages these are the last versions supporting python 2
-                        'pynacl==1.4.0',
-                        'filelock==3.2.1',
-                        'cryptography==3.3.2'
-                        ],
-<<<<<<< HEAD
-      tests_require=['pytest==4.6.5',
-                     'mock==3.0.5',
-                     'psutil==5.6.3',
-                     'memory_profiler==0.55',
-                     'statistics==1.0.3.5',
-                     'requests-testadapter==0.3.0'],
-      setup_requires=['flake8==3.8.3'],
-=======
+      install_requires=open('requirements.txt').read(),
       tests_require=test_req,
       extras_require={'test': test_req},
-      setup_requires=['flake8==3.7.8'],
->>>>>>> ea51045 (Add deflake feature to Ducktape (#299))
+      setup_requires=['flake8==3.8.3'],
       cmdclass={'test': PyTest},
       )
