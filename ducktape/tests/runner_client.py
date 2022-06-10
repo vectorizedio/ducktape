@@ -17,7 +17,9 @@ import os
 import signal
 import time
 import traceback
+from typing import Optional
 import zmq
+from zmq import Socket
 
 from six import iteritems
 
@@ -288,7 +290,7 @@ class Sender(object):
         self.serde = SerDe()
         self.server_endpoint = "tcp://%s:%s" % (str(server_host), str(server_port))
         self.zmq_context = zmq.Context()
-        self.socket = None
+        self.socket: Optional[Socket] = None
         self.poller = zmq.Poller()
 
         self.message_supplier = message_supplier
