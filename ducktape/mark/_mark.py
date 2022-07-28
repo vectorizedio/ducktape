@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from ducktape.errors import DucktapeError
 from six import iteritems
 
@@ -23,7 +22,6 @@ import os
 
 class Mark(object):
     """Common base class for "marks" which may be applied to test functions/methods."""
-
     @staticmethod
     def mark(fun, mark):
         """Attach a tag indicating that fun has been marked with the given mark
@@ -80,7 +78,6 @@ class Mark(object):
 
 class Ignore(Mark):
     """Ignore a specific parametrization of test."""
-
     def __init__(self, **kwargs):
         # Ignore tests with injected_args matching self.injected_args
         self.injected_args = kwargs
@@ -90,18 +87,21 @@ class Ignore(Mark):
         return "IGNORE"
 
     def apply(self, seed_context, context_list):
-        assert len(context_list) > 0, "ignore annotation is not being applied to any test cases"
+        assert len(
+            context_list
+        ) > 0, "ignore annotation is not being applied to any test cases"
         for ctx in context_list:
             ctx.ignore = ctx.ignore or self.injected_args is None or self.injected_args == ctx.injected_args
         return context_list
 
     def __eq__(self, other):
-        return super(Ignore, self).__eq__(other) and self.injected_args == other.injected_args
+        return super(
+            Ignore,
+            self).__eq__(other) and self.injected_args == other.injected_args
 
 
 class IgnoreAll(Ignore):
     """This mark signals to ignore all parametrizations of a test."""
-
     def __init__(self):
         super(IgnoreAll, self).__init__()
         self.injected_args = None
@@ -109,34 +109,43 @@ class IgnoreAll(Ignore):
 
 class OkToFail(Mark):
     """Run the test but categorize status as OPASS or OFAIL instead of PASS or FAIL."""
-
-    def __init__(self):
+    def __init__(self, **kwargs):
         super(OkToFail, self).__init__()
-        self.injected_args = None
+        self.injected_args = kwargs
 
     @property
     def name(self):
         return "OK_TO_FAIL"
 
     def apply(self, seed_context, context_list):
-        assert len(context_list) > 0, "ignore annotation is not being applied to any test cases"
+        assert len(
+            context_list
+        ) > 0, "ok_to_fail annotation is not being applied to any test cases"
         for ctx in context_list:
-            ctx.ok_to_fail = ctx.ok_to_fail or self.injected_args is None
+            ctx.ok_to_fail = ctx.ok_to_fail or self.injected_args is None or self.injected_args == ctx.injected_args
         return context_list
+
+
+class OkToFailAll(OkToFail):
+    """Run the test but categorize status as OPASS or OFAIL instead of PASS or FAIL."""
+    def __init__(self):
+        super(OkToFailAll, self).__init__()
+        self.injected_args = None
 
 
 class Matrix(Mark):
     """Parametrize with a matrix of arguments.
     Assume each values in self.injected_args is iterable
     """
-
     def __init__(self, **kwargs):
         self.injected_args = kwargs
         for k in self.injected_args:
             try:
                 iter(self.injected_args[k])
             except TypeError as te:
-                raise DucktapeError("Expected all values in @matrix decorator to be iterable: " + str(te))
+                raise DucktapeError(
+                    "Expected all values in @matrix decorator to be iterable: "
+                    + str(te))
 
     @property
     def name(self):
@@ -145,26 +154,32 @@ class Matrix(Mark):
     def apply(self, seed_context, context_list):
         for injected_args in cartesian_product_dict(self.injected_args):
             injected_fun = _inject(**injected_args)(seed_context.function)
-            context_list.insert(0, seed_context.copy(function=injected_fun, injected_args=injected_args))
+            context_list.insert(
+                0,
+                seed_context.copy(function=injected_fun,
+                                  injected_args=injected_args))
 
         return context_list
 
     def __eq__(self, other):
-        return super(Matrix, self).__eq__(other) and self.injected_args == other.injected_args
+        return super(
+            Matrix,
+            self).__eq__(other) and self.injected_args == other.injected_args
 
 
 class Defaults(Mark):
     """Parametrize with a default matrix of arguments on existing parametrizations.
     Assume each values in self.injected_args is iterable
     """
-
     def __init__(self, **kwargs):
         self.injected_args = kwargs
         for k in self.injected_args:
             try:
                 iter(self.injected_args[k])
             except TypeError as te:
-                raise DucktapeError("Expected all values in @defaults decorator to be iterable: " + str(te))
+                raise DucktapeError(
+                    "Expected all values in @defaults decorator to be iterable: "
+                    + str(te))
 
     @property
     def name(self):
@@ -174,10 +189,14 @@ class Defaults(Mark):
         new_context_list = []
         if context_list:
             for ctx in context_list:
-                for injected_args in cartesian_product_dict(
-                        {arg: self.injected_args[arg] for arg in self.injected_args if arg not in ctx.injected_args}):
+                for injected_args in cartesian_product_dict({
+                        arg: self.injected_args[arg]
+                        for arg in self.injected_args
+                        if arg not in ctx.injected_args
+                }):
                     injected_args.update(ctx.injected_args)
-                    injected_fun = _inject(**injected_args)(seed_context.function)
+                    injected_fun = _inject(**injected_args)(
+                        seed_context.function)
                     new_context = seed_context.copy(
                         function=injected_fun,
                         injected_args=injected_args,
@@ -186,17 +205,21 @@ class Defaults(Mark):
         else:
             for injected_args in cartesian_product_dict(self.injected_args):
                 injected_fun = _inject(**injected_args)(seed_context.function)
-                new_context_list.insert(0, seed_context.copy(function=injected_fun, injected_args=injected_args))
+                new_context_list.insert(
+                    0,
+                    seed_context.copy(function=injected_fun,
+                                      injected_args=injected_args))
 
         return new_context_list
 
     def __eq__(self, other):
-        return super(Defaults, self).__eq__(other) and self.injected_args == other.injected_args
+        return super(
+            Defaults,
+            self).__eq__(other) and self.injected_args == other.injected_args
 
 
 class Parametrize(Mark):
     """Parametrize a test function"""
-
     def __init__(self, **kwargs):
         self.injected_args = kwargs
 
@@ -206,17 +229,23 @@ class Parametrize(Mark):
 
     def apply(self, seed_context, context_list):
         injected_fun = _inject(**self.injected_args)(seed_context.function)
-        context_list.insert(0, seed_context.copy(function=injected_fun, injected_args=self.injected_args))
+        context_list.insert(
+            0,
+            seed_context.copy(function=injected_fun,
+                              injected_args=self.injected_args))
         return context_list
 
     def __eq__(self, other):
-        return super(Parametrize, self).__eq__(other) and self.injected_args == other.injected_args
+        return super(
+            Parametrize,
+            self).__eq__(other) and self.injected_args == other.injected_args
 
 
 class Env(Mark):
     def __init__(self, **kwargs):
         self.injected_args = kwargs
-        self.should_ignore = any(os.environ.get(key) != value for key, value in iteritems(kwargs))
+        self.should_ignore = any(
+            os.environ.get(key) != value for key, value in iteritems(kwargs))
 
     @property
     def name(self):
@@ -229,7 +258,9 @@ class Env(Mark):
         return context_list
 
     def __eq__(self, other):
-        return super(Env, self).__eq__(other) and self.injected_args == other.injected_args
+        return super(
+            Env,
+            self).__eq__(other) and self.injected_args == other.injected_args
 
 
 PARAMETRIZED = Parametrize()
@@ -246,7 +277,8 @@ def _is_parametrize_mark(m):
 
 def parametrized(f):
     """Is this function or object decorated with @parametrize or @matrix?"""
-    return Mark.marked(f, PARAMETRIZED) or Mark.marked(f, MATRIX) or Mark.marked(f, DEFAULTS)
+    return Mark.marked(f, PARAMETRIZED) or Mark.marked(
+        f, MATRIX) or Mark.marked(f, DEFAULTS)
 
 
 def ignored(f):
@@ -334,6 +366,7 @@ def matrix(**kwargs):
     def parametrizer(f):
         Mark.mark(f, Matrix(**kwargs))
         return f
+
     return parametrizer
 
 
@@ -368,6 +401,7 @@ def defaults(**kwargs):
     def parametrizer(f):
         Mark.mark(f, Defaults(**kwargs))
         return f
+
     return parametrizer
 
 
@@ -392,6 +426,7 @@ def parametrize(**kwargs):
     def parametrizer(f):
         Mark.mark(f, Parametrize(**kwargs))
         return f
+
     return parametrizer
 
 
@@ -450,8 +485,15 @@ def ok_to_fail(*args, **kwargs):
         # @ok_to_fail
         # def test_function:
         #   ...
-        Mark.mark(args[0], OkToFail())
+        Mark.mark(args[0], OkToFailAll())
         return args[0]
+
+    # this corresponds to usage of @ok_to_fail with arguments
+    def ok_to_failer(f):
+        Mark.mark(f, OkToFail(**kwargs))
+        return f
+
+    return ok_to_failer
 
 
 def env(**kwargs):
@@ -467,7 +509,6 @@ def _inject(*args, **kwargs):
     This is almost identical to decorating with functools.partial, except we also propagate the wrapped
     function's __name__.
     """
-
     def injector(f):
         assert callable(f)
 
@@ -480,4 +521,5 @@ def _inject(*args, **kwargs):
         wrapper.function = f
 
         return wrapper
+
     return injector
