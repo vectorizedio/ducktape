@@ -35,47 +35,49 @@ class TestResult(object):
                  summary="",
                  data=None,
                  start_time=-1,
-                 stop_time=-1):
+                 stop_time=-1,
+                 load_from_json=False):
         """
         @param test_context  standard test context object
         @param test_status   did the test pass or fail, etc?
         @param summary       summary information
         @param data          data returned by the test, e.g. throughput
         """
-        self.nodes_allocated = len(test_context.cluster)
-        if hasattr(test_context, "services"):
-            self.services = test_context.services.to_json()
-            self.nodes_used = test_context.services.min_cluster_spec().size()
-        else:
-            self.services = {}
-            self.nodes_used = 0
+        if not load_from_json:
+            self.nodes_allocated = len(test_context.cluster)
+            if hasattr(test_context, "services"):
+                self.services = test_context.services.to_json()
+                self.nodes_used = test_context.services.min_cluster_spec().size()
+            else:
+                self.services = {}
+                self.nodes_used = 0
 
-        self.test_id = test_context.test_id
-        self.module_name = test_context.module_name
-        self.cls_name = test_context.cls_name
-        self.function_name = test_context.function_name
-        self.injected_args = test_context.injected_args
-        self.description = test_context.description
-        self.results_dir = TestContext.results_dir(test_context, test_index)
+            self.test_id = test_context.test_id
+            self.module_name = test_context.module_name
+            self.cls_name = test_context.cls_name
+            self.function_name = test_context.function_name
+            self.injected_args = test_context.injected_args
+            self.description = test_context.description
+            self.results_dir = TestContext.results_dir(test_context, test_index)
 
-        self.test_index = test_index
+            self.test_index = test_index
 
-        self.session_context = session_context
-        self.test_status = test_status
-        self.summary = summary
-        self.data = data
+            self.session_context = session_context
+            self.test_status = test_status
+            self.summary = summary
+            self.data = data
 
-        self.base_results_dir = session_context.results_dir
-        if not self.results_dir.endswith(os.path.sep):
-            self.results_dir += os.path.sep
-        if not self.base_results_dir.endswith(os.path.sep):
-            self.base_results_dir += os.path.sep
-        assert self.results_dir.startswith(self.base_results_dir)
-        self.relative_results_dir = self.results_dir[len(self.base_results_dir):]
+            self.base_results_dir = session_context.results_dir
+            if not self.results_dir.endswith(os.path.sep):
+                self.results_dir += os.path.sep
+            if not self.base_results_dir.endswith(os.path.sep):
+                self.base_results_dir += os.path.sep
+            assert self.results_dir.startswith(self.base_results_dir)
+            self.relative_results_dir = self.results_dir[len(self.base_results_dir):]
 
-        # For tracking run time
-        self.start_time = start_time
-        self.stop_time = stop_time
+            # For tracking run time
+            self.start_time = start_time
+            self.stop_time = stop_time
 
     def __repr__(self):
         return "<%s - test_status:%s, data:%s>" % (self.__class__.__name__, self.test_status, str(self.data))
@@ -123,6 +125,27 @@ class TestResult(object):
             "nodes_used": self.nodes_used,
             "services": self.services
         }
+
+    def from_json(self, obj, sc):
+        self.test_id = obj["test_id"]
+        self.module_name = obj["module_name"]
+        self.cls_name = obj["cls_name"]
+        self.function_name = obj["function_name"]
+        self.injected_args = obj["injected_args"]
+        self.description = obj["description"]
+        self.results_dir = obj["results_dir"]
+        self.relative_results_dir = obj["relative_results_dir"]
+        self.base_results_dir = obj["base_results_dir"]
+        self.test_status = obj["test_status"]
+        self.summary = obj["summary"]
+        self.data = obj["data"]
+        self.start_time = obj["start_time"]
+        self.stop_time = obj["stop_time"]
+        self.session_context = sc
+        self.nodes_allocated = obj["nodes_allocated"]
+        self.nodes_used = obj["nodes_used"]
+        self.services = obj["services"]
+        return self
 
 
 class TestResults(object):
@@ -231,3 +254,23 @@ class TestResults(object):
             "parallelism": parallelism,
             "results": [r for r in self._results]
         }
+
+    def from_json(self, obj, sc):
+        self.ducktape_version = obj["ducktape_version"]
+        self.session_context = sc
+        self.start_time = obj["start_time"]
+        self.stop_time = obj["stop_time"]
+        self.run_time_statistics = obj["run_time_statistics"]
+        self.cluster_nodes_used = obj["cluster_nodes_used"]
+        self.cluster_nodes_allocated = obj["cluster_nodes_allocated"]
+        self.cluster_utilization = obj["cluster_utilization"]
+        self.cluster_num_nodes = obj["cluster_num_nodes"]
+        self._results = []
+        self.results = []
+        for r in obj["results"]:
+            tr = TestResult(test_context="", test_index="", session_context="", load_from_json=True)
+            tr = tr.from_json(r, sc)
+            self._results.append(tr)
+            self.results.append(tr)
+        self.parallelism = obj["parallelism"]
+        return self

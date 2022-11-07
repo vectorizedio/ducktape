@@ -49,6 +49,20 @@ class SessionContext(object):
     def to_json(self):
         return self.__dict__
 
+    def from_json(self, obj):
+        self.session_id = obj["session_id"]
+        self.results_dir = obj["results_dir"]
+        self.debug = obj["debug"]
+        self.compress = obj["compress"]
+        self.exit_first = obj["exit_first"]
+        self.no_teardown = obj["no_teardown"]
+        self.max_parallel = obj["max_parallel"]
+        self.default_expected_num_nodes = obj["default_expected_num_nodes"]
+        self.fail_bad_cluster_utilization = obj["fail_bad_cluster_utilization"]
+        self.test_runner_timeout = obj["test_runner_timeout"]
+        self._globals = obj["_globals"]
+        return self
+
 
 class SessionLoggerMaker(LoggerMaker):
     def __init__(self, session_context):
