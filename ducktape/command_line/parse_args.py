@@ -81,6 +81,8 @@ def create_ducktape_parser():
     parser.add_argument("--test-runner-timeout", action="store", type=int, default=1800000,
                         help="Amount of time in milliseconds between test communicating between the test runner"
                              " before a timeout error occurs. Default is 30 minutes")
+    parser.add_argument("--raw-test-results", action="store", type=str,
+                        help="Path to write raw results file")
     return parser
 
 

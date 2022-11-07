@@ -174,6 +174,12 @@ def main():
     runner = TestRunner(cluster, session_context, session_logger, tests)
     test_results = runner.run_all_tests()
 
+    if args_dict["raw_test_results"]:
+        print("Writing raw results file to %s." % args_dict["raw_test_results"])
+        with open(f"{args_dict['raw_test_results']}/raw_results.json", "w") as f:
+            f.write(str(test_results.to_json()))
+        f.close()
+
     # Report results
     reporters = [
         SimpleStdoutSummaryReporter(test_results),
