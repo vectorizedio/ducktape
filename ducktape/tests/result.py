@@ -145,6 +145,8 @@ class TestResult(object):
         self.nodes_allocated = obj["nodes_allocated"]
         self.nodes_used = obj["nodes_used"]
         self.services = obj["services"]
+        # custom
+        self.test_log_path = obj["test_log_path"] if "test_log_path" in obj else ""
         return self
 
 

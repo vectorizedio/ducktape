@@ -90,9 +90,10 @@ class SingleResultFileReporter(SingleResultReporter):
 
 
 class SummaryReporter(object):
-    def __init__(self, results):
+    def __init__(self, results, use_custom_test_log_path=False):
         self.results = results
         self.width = get_terminal_size()[0]
+        self.use_custom_test_log_path = use_custom_test_log_path
 
     def report(self):
         raise NotImplementedError("method report must be implemented by subclasses of SummaryReporter")
@@ -275,6 +276,8 @@ class HTMLSummaryReporter(SummaryReporter):
         Path is relative to the base results_dir. Relative path behaves better if the results directory is copied,
         moved etc.
         """
+        if self.use_custom_test_log_path:
+            return result.test_log_path
         base_dir = os.path.abspath(result.session_context.results_dir)
         base_dir = os.path.join(base_dir, "")  # Ensure trailing directory indicator
 
