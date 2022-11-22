@@ -47,7 +47,12 @@ class SessionContext(object):
         return self._globals
 
     def to_json(self):
-        return self.__dict__
+        session_context_dict = self.__dict__
+        # redact sensitive information
+        session_context_dict['_globals']['s3_access_key'] = 'xxxxx'
+        session_context_dict['_globals']['s3_region'] = 'xxxxx'
+        session_context_dict['_globals']['s3_secret_key'] = 'xxxxx'
+        return session_context_dict
 
 
 class SessionLoggerMaker(LoggerMaker):
