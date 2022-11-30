@@ -238,6 +238,7 @@ class RunnerClient(object):
                 # if any thread is not terminated correctly by the test we'll see it here
                 self.dump_threads(f"Threads after {self.test_id} finished")
 
+                # if run passed, and not on the first run, the test is flaky
                 if test_status == PASS and num_runs > 1:
                     test_status = FLAKY
 
@@ -456,8 +457,6 @@ class RunnerClient(object):
             self.logger.log(log_level, msg, *args, **kwargs)
 
         self.send(self.message.log(msg, level=log_level))
-<<<<<<< HEAD
-=======
 
     def dump_threads(self, msg):
         dump = '\n'.join([t.name for t in threading.enumerate()])
