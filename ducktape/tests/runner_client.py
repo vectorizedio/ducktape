@@ -16,6 +16,7 @@ from collections import defaultdict
 import logging
 import os
 import signal
+import threading
 import time
 import traceback
 from typing import List, Mapping
@@ -233,7 +234,10 @@ class RunnerClient(object):
                 if run_summary:
                     summaries.append(run_summary)
 
-                # if run passed, and not on the first run, the test is flaky
+                # dump threads after the test is complete;
+                # if any thread is not terminated correctly by the test we'll see it here
+                self.dump_threads(f"Threads after {self.test_id} finished")
+
                 if test_status == PASS and num_runs > 1:
                     test_status = FLAKY
 
@@ -452,3 +456,66 @@ class RunnerClient(object):
             self.logger.log(log_level, msg, *args, **kwargs)
 
         self.send(self.message.log(msg, level=log_level))
+<<<<<<< HEAD
+=======
+
+    def dump_threads(self, msg):
+        dump = '\n'.join([t.name for t in threading.enumerate()])
+        self.log(logging.DEBUG, f"{msg}: {dump}")
+
+
+class Sender(object):
+    REQUEST_TIMEOUT_MS = 3000
+    NUM_RETRIES = 5
+
+    def __init__(self, server_host, server_port, message_supplier, logger):
+        self.serde = SerDe()
+        self.server_endpoint = "tcp://%s:%s" % (str(server_host), str(server_port))
+        self.zmq_context = zmq.Context()
+        self.socket = None
+        self.poller = zmq.Poller()
+
+        self.message_supplier = message_supplier
+        self.logger = logger
+
+        self._init_socket()
+
+    def _init_socket(self):
+        self.socket = self.zmq_context.socket(zmq.REQ)
+        self.socket.connect(self.server_endpoint)
+        self.poller.register(self.socket, zmq.POLLIN)
+
+    def send(self, event, blocking=True):
+
+        retries_left = Sender.NUM_RETRIES
+
+        while retries_left > 0:
+            serialized_event = self.serde.serialize(event)
+            self.socket.send(serialized_event)
+            retries_left -= 1
+            waiting_for_reply = True
+
+            while waiting_for_reply:
+                sockets = dict(self.poller.poll(Sender.REQUEST_TIMEOUT_MS))
+
+                if sockets.get(self.socket) == zmq.POLLIN:
+                    reply = self.socket.recv()
+                    if reply:
+                        return self.serde.deserialize(reply)
+                    else:
+                        # send another request...
+                        break
+                else:
+                    self.close()
+                    self._init_socket()
+                    waiting_for_reply = False
+                # Ensure each message we attempt to send has a unique id
+                # This copy constructor gives us a duplicate with a new message id
+                event = self.message_supplier.copy(event)
+
+        raise RuntimeError("Unable to receive response from driver")
+
+    def close(self):
+        self.socket.setsockopt(zmq.LINGER, 0)
+        self.socket.close()
+        self.poller.unregister(self.socket)
