@@ -203,11 +203,15 @@ class TestRunner(object):
                         event = self.receiver.recv(timeout=self.session_context.test_runner_timeout)
                         self._handle(event)
                     except Exception as e:
-                        err_str = "Exception receiving message: %s: %s, active_tests: \n %s \n" % (str(type(e)), str(e), self.active_tests_debug())
+                        err_str = "Exception receiving message: %s: %s" % (str(type(e)), str(e))
+                        err_str += ", active_tests: \n %s \n" % (self.active_tests_debug())
                         err_str += "\n" + traceback.format_exc(limit=16)
                         self._log(logging.ERROR, err_str)
 
                         # All processes are on the same machine, so treat communication failure as a fatal error
+                        for proc in self._client_procs.values():
+                            proc.terminate()
+                        self._client_procs = {}
                         raise
             except KeyboardInterrupt:
                 # If SIGINT is received, stop triggering new tests, and let the currently running tests finish
