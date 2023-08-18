@@ -41,6 +41,11 @@ Wednesday, November 30th, 2022
 ======
 - **DO NOT USE**, this release has a nasty bug - `#339 <https://github.com/confluentinc/ducktape/issues/339>`_
 - Do not schedule tests on unresponsive nodes - `#325 <https://github.com/confluentinc/ducktape/pull/325>`_
+0.9.4
+=====
+Friday, August 18th, 2023
+-------------------------
+- Updated `requests` version to 2.31.0
 
 0.9.3
 =====
