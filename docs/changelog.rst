@@ -28,6 +28,11 @@ Wednesday, November 30th, 2022
 0.11.0
 ======
 - Option to fail tests without `@cluster` annotation. Deprecate ``min_cluster_spec()`` method in the ``Test`` class - `#336 <https://github.com/confluentinc/ducktape/pull/336>`_
+0.10.3
+======
+Friday, August 18th, 2023
+-------------------------
+- Updated `requests` version to 2.31.0
 
 0.10.2
 ======
