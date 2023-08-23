@@ -135,7 +135,7 @@ class TestResults(object):
         self._results = []
         self.session_context = session_context
         self.cluster = cluster
-
+        self.command_line = ""
         # For tracking total run time
         self.start_time = -1
         self.stop_time = -1
