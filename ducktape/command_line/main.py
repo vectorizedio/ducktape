@@ -190,7 +190,7 @@ def main():
     deflake_num = max(1, deflake_num)
     runner = TestRunner(cluster, session_context, session_logger, tests, deflake_num)
     test_results = runner.run_all_tests()
-
+    test_results.command_line = " ".join(sys.argv)
     # Report results
     reporters = [
         SimpleStdoutSummaryReporter(test_results),
