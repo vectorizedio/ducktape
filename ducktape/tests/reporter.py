@@ -307,6 +307,7 @@ class HTMLSummaryReporter(SummaryReporter):
 
         args = {
             'ducktape_version': ducktape_version(),
+            'command_line': self.results.command_line,
             'num_tests': num_tests,
             'num_passes': self.results.num_passed,
             'num_flaky': self.results.num_flaky,
