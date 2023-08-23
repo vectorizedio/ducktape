@@ -28,6 +28,7 @@
               </h1>
               <p>Test Session: {this.props.heading.session}</p>
               <p>Ducktape Version: {this.props.heading.ducktape_version}</p>
+              <p>Command line: {this.props.heading.command_line}</p>
             </div>
           );
         }
@@ -188,7 +189,8 @@
       
       HEADING={
         "ducktape_version": '%(ducktape_version)s',
-        "session": '%(session)s'
+        "session": '%(session)s',
+        "command_line": '%(command_line)s'
       };
 
       COLOR_KEYS=[%(test_status_names)s];
