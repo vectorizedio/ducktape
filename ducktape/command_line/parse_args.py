@@ -30,6 +30,8 @@ def create_ducktape_parser():
     parser.add_argument('--exclude', type=str, nargs='*', default=None,
                         help='one or more space-delimited strings indicating which tests to exclude')
     parser.add_argument("--collect-only", action="store_true", help="display collected tests, but do not run.")
+    parser.add_argument("--collect-num-nodes", action="store_true",
+                        help="display total number of nodes requested by all tests, but do not run anything.")
     parser.add_argument("--debug", action="store_true", help="pipe more verbose test output to stdout.")
     parser.add_argument("--config-file", action="store", default=ConsoleDefaults.USER_CONFIG_FILE,
                         help="path to project-specific configuration file.")
@@ -77,10 +79,27 @@ def create_ducktape_parser():
     parser.add_argument("--sample", action="store", type=int,
                         help="The size of a random test sample to run")
     parser.add_argument("--fail-bad-cluster-utilization", action="store_true",
-                        help="Fail a test if the cluster node utilization does not match the cluster node usage.")
+                        help="Fail a test if the test declared that it needs more nodes than it actually used. "
+                             "E.g. if the test had `@cluster(num_nodes=10)` annotation, "
+                             "but never used more than 5 nodes during its execution.")
+    parser.add_argument("--fail-greedy-tests", action="store_true",
+                        help="Fail a test if it has no @cluster annotation "
+                             "or if @cluster annotation is empty. "
+                             "You can still specify 0-sized cluster explicitly using either num_nodes=0 "
+                             "or cluster_spec=ClusterSpec.empty()")
     parser.add_argument("--test-runner-timeout", action="store", type=int, default=1800000,
                         help="Amount of time in milliseconds between test communicating between the test runner"
                              " before a timeout error occurs. Default is 30 minutes")
+    parser.add_argument("--ssh-checker-function", action="store", type=str, nargs="+",
+                        help="Python module path(s) to a function that takes an exception and a remote account"
+                        " that will be called when an ssh error occurs, this can give some "
+                        "validation or better logging when an ssh error occurs. Specify any "
+                        "number of module paths after this flag to be called."),
+    parser.add_argument("--deflake", action="store", type=int, default=1,
+                        help="the number of times a failed test should be ran in total (including its initial run) "
+                             "to determine flakyness. When not present, deflake will not be used, "
+                             "and a test will be marked as either passed or failed. "
+                             "When enabled tests will be marked as flaky if it passes on any of the reruns")
     return parser
 
 

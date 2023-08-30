@@ -27,12 +27,13 @@ from ducktape.command_line.parse_args import parse_args
 from ducktape.tests.loader import TestLoader, LoaderException
 from ducktape.tests.loggermaker import close_logger
 from ducktape.tests.reporter import SimpleStdoutSummaryReporter, SimpleFileSummaryReporter, \
-    HTMLSummaryReporter, JSONReporter, JUnitReporter
+    HTMLSummaryReporter, JSONReporter, JUnitReporter, FailedTestSymbolReporter
 from ducktape.tests.runner import TestRunner
 from ducktape.tests.session import SessionContext, SessionLoggerMaker
 from ducktape.tests.session import generate_session_id, generate_results_dir
 from ducktape.utils.local_filesystem_utils import mkdir_p
 from ducktape.utils import persistence
+from ducktape.utils.util import load_function
 
 
 def get_user_defined_globals(globals_str):
@@ -143,6 +144,11 @@ def main():
             print("    " + str(test))
         sys.exit(0)
 
+    if args_dict["collect_num_nodes"]:
+        total_nodes = sum(test.expected_num_nodes for test in tests)
+        print(total_nodes)
+        sys.exit(0)
+
     if args_dict["sample"]:
         print("Running a sample of %d tests" % args_dict["sample"])
         try:
@@ -160,7 +166,14 @@ def main():
         (cluster_mod_name, cluster_class_name) = args_dict["cluster"].rsplit('.', 1)
         cluster_mod = importlib.import_module(cluster_mod_name)
         cluster_class = getattr(cluster_mod, cluster_class_name)
-        cluster = cluster_class(cluster_file=args_dict["cluster_file"])
+
+        cluster_kwargs = {"cluster_file": args_dict["cluster_file"]}
+        checker_function_names = args_dict['ssh_checker_function']
+        if checker_function_names:
+            checkers = [load_function(func_path) for func_path in checker_function_names]
+            if checkers:
+                cluster_kwargs['ssh_exception_checks'] = checkers
+        cluster = cluster_class(**cluster_kwargs)
         for ctx in tests:
             # Note that we're attaching a reference to cluster
             # only after test context objects have been instantiated
@@ -171,7 +184,11 @@ def main():
         sys.exit(1)
 
     # Run the tests
-    runner = TestRunner(cluster, session_context, session_logger, tests)
+    deflake_num = args_dict['deflake']
+    if deflake_num < 1:
+        session_logger.warning("specified number of deflake runs specified to be less than 1, running without deflake.")
+    deflake_num = max(1, deflake_num)
+    runner = TestRunner(cluster, session_context, session_logger, tests, deflake_num)
     test_results = runner.run_all_tests()
 
     # Report results
@@ -180,7 +197,8 @@ def main():
         SimpleFileSummaryReporter(test_results),
         HTMLSummaryReporter(test_results),
         JSONReporter(test_results),
-        JUnitReporter(test_results)
+        JUnitReporter(test_results),
+        FailedTestSymbolReporter(test_results)
     ]
 
     for r in reporters:
