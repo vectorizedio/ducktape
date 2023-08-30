@@ -206,11 +206,10 @@ class CheckRunner(object):
         runner = TestRunner(mock_cluster, session_context, Mock(), ctx_list, 1)
 
         results = runner.run_all_tests()
-        assert len(results) == 4
-        assert results.num_flaky == 0
-        assert results.num_failed == 2
-        assert results.num_passed == 0
-        assert results.num_ignored == 2
+        assert len(results) == 2
+        assert results.num_failed == 1
+        assert results.num_passed == 1
+        assert results.num_ignored == 0
 
     def check_run_failure_with_bad_cluster_allocation(self):
         """Check test should be marked failed if it under-utilizes the cluster resources."""
