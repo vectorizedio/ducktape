@@ -340,7 +340,8 @@ class HTMLSummaryReporter(SummaryReporter):
             'ignored_tests': "".join(ignored_result_string),
             'ofailed_tests': "".join(ofailed_result_string),
             'opassed_tests': "".join(opassed_result_string),
-            'test_status_names': ",".join(["\'%s\'" % str(status) for status in [PASS, FAIL, IGNORE, FLAKY, OPASS, OFAIL]])
+            'test_status_names': ",".join(["\'%s\'" % str(status) for status in
+                                           [PASS, FAIL, IGNORE, FLAKY, OPASS, OFAIL]])
         }
 
         html = template % args

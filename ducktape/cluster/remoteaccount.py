@@ -18,21 +18,21 @@ import paramiko
 # Changing it due to https://github.com/redpanda-data/redpanda/issues/6792
 paramiko.packet.Packetizer.REKEY_BYTES = pow(2, 32) # noqa
 
-from contextlib import contextmanager
-import logging
-import os
-from paramiko import SSHClient, SSHConfig, MissingHostKeyPolicy
-from paramiko.ssh_exception import SSHException, NoValidConnectionsError
-import shutil
-import signal
-import socket
-import stat
-import tempfile
-import warnings
+from contextlib import contextmanager # noqa
+import logging # noqa
+import os # noqa
+from paramiko import SSHClient, SSHConfig, MissingHostKeyPolicy # noqa
+from paramiko.ssh_exception import SSHException, NoValidConnectionsError # noqa
+import shutil # noqa
+import signal # noqa
+import socket # noqa
+import stat # noqa
+import tempfile # noqa
+import warnings # noqa
 
-from ducktape.utils.http_utils import HttpMixin
-from ducktape.utils.util import wait_until
-from ducktape.errors import DucktapeError
+from ducktape.utils.http_utils import HttpMixin # noqa
+from ducktape.utils.util import wait_until # noqa
+from ducktape.errors import DucktapeError # noqa
 
 
 def check_ssh(method):
