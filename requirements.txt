@@ -6,7 +6,7 @@ pyparsing<3.0.0
 zipp<2.0.0
 pywinrm==0.2.2
 requests==2.24.0
-paramiko~=2.11.0
+paramiko @ git+https://github.com/redpanda-data/paramiko@80de6f2f6657c901778a1ffe2213dbc31d7edc35
 pyzmq==19.0.2
 pycryptodome==3.9.8
 # > 5.0 drops py27 support
