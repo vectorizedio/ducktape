@@ -86,6 +86,14 @@ h1, h2, h3, h4, h5, h6 {
     background-color: #9cf;
 }
 
+.ofailfips {
+    background-color: #ffc
+}
+
+.opassfips {
+    background-color: #9cf;
+}
+
 .testcase { 
     margin-left: 2em;
 }
