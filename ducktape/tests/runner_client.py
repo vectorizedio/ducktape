@@ -29,7 +29,7 @@ from ducktape.tests.serde import SerDe
 from ducktape.tests.status import FLAKY
 from ducktape.tests.test import test_logger, TestContext
 
-from ducktape.tests.result import TestResult, IGNORE, PASS, FAIL, OPASS, OFAIL
+from ducktape.tests.result import TestResult, IGNORE, PASS, FAIL, OPASS, OFAIL, OPASSFIPS, OFAILFIPS
 from ducktape.utils.local_filesystem_utils import mkdir_p
 
 
@@ -187,12 +187,16 @@ class RunnerClient(object):
 
             if self.test_context.ok_to_fail:
                 test_status = OPASS
+            elif self.test_context.ok_to_fail_fips:
+                test_status = OPASSFIPS
             else:
                 test_status = PASS
 
         except BaseException as e:
             if self.test_context.ok_to_fail:
                 test_status = OFAIL
+            elif self.test_context.ok_to_fail_fips:
+                test_status = OFAILFIPS
             else:
                 test_status = FAIL
             err_trace = self._exc_msg(e)
@@ -234,6 +238,9 @@ class RunnerClient(object):
                 elif result == OPASS:
                     self.log(logging.INFO, "OFAIL: " + message)
                     result = OFAIL
+                elif result == OPASSFIPS:
+                    self.log(logging.INFO, "OFAILFIPS: " + message)
+                    result = OFAILFIPS
                 summary += message
             else:
                 self.log(logging.WARN, message)

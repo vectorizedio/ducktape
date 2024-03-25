@@ -29,7 +29,7 @@ from ducktape.command_line.defaults import ConsoleDefaults
 from ducktape.services.service_registry import ServiceRegistry
 from ducktape.template import TemplateRenderer
 from ducktape.mark.resource import CLUSTER_SPEC_KEYWORD, CLUSTER_SIZE_KEYWORD
-from ducktape.tests.status import FAIL, OFAIL
+from ducktape.tests.status import FAIL, OFAIL, OFAILFIPS
 
 
 class Test(TemplateRenderer):
@@ -134,7 +134,8 @@ class Test(TemplateRenderer):
                 # Gather locations of logs to collect
                 node_logs = []
                 for log_name in log_dirs.keys():
-                    if test_status == FAIL or test_status == OFAIL or self.should_collect_log(log_name, service):
+                    if test_status == FAIL or test_status == OFAIL or test_status == OFAILFIPS or \
+                            self.should_collect_log(log_name, service):
                         node_logs.append(log_dirs[log_name]["path"])
 
                 self.test_context.logger.debug("Preparing to copy logs from %s: %s" %
@@ -288,6 +289,7 @@ class TestContext(object):
         self.injected_args = kwargs.get("injected_args")
         self.ignore = kwargs.get("ignore", False)
         self.ok_to_fail = kwargs.get("ok_to_fail", False)
+        self.ok_to_fail_fips = kwargs.get("ok_to_fail_fips", False)
 
         # cluster_use_metadata is a dict containing information about how this test will use cluster resources
         self.cluster_use_metadata = copy.copy(kwargs.get("cluster_use_metadata", {}))
@@ -305,8 +307,8 @@ class TestContext(object):
         return \
             f"<module={self.module}, cls={self.cls_name}, function={self.function_name}, " \
             f"injected_args={self.injected_args}, file={self.file}, ignore={self.ignore}, " \
-            f"ok_to_fail={self.ok_to_fail}, cluster_size={self.expected_num_nodes}, " \
-            f"cluster_spec={self.expected_cluster_spec}>"
+            f"ok_to_fail={self.ok_to_fail}, ok_to_fail={self.ok_to_fail_fips}, " \
+            f"cluster_size={self.expected_num_nodes}, cluster_spec={self.expected_cluster_spec}>"
 
     def copy(self, **kwargs):
         """Construct a new TestContext object from another TestContext object

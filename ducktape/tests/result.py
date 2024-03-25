@@ -21,7 +21,7 @@ from ducktape.json_serializable import DucktapeJSONEncoder
 from ducktape.tests.reporter import SingleResultFileReporter
 from ducktape.utils.local_filesystem_utils import mkdir_p
 from ducktape.utils.util import ducktape_version
-from ducktape.tests.status import FLAKY, PASS, FAIL, IGNORE, OPASS, OFAIL
+from ducktape.tests.status import FLAKY, PASS, FAIL, IGNORE, OPASS, OFAIL, OPASSFIPS, OFAILFIPS
 
 
 class TestResult(object):
@@ -174,6 +174,14 @@ class TestResults(object):
         return len([r for r in self._results if r.test_status == OFAIL])
 
     @property
+    def num_opassedfips(self):
+        return len([r for r in self._results if r.test_status == OPASSFIPS])
+
+    @property
+    def num_ofailedfips(self):
+        return len([r for r in self._results if r.test_status == OFAILFIPS])
+
+    @property
     def run_time_seconds(self):
         if self.start_time < 0:
             return -1
@@ -231,6 +239,8 @@ class TestResults(object):
             "num_ignored": self.num_ignored,
             "num_opassed": self.num_opassed,
             "num_ofailed": self.num_ofailed,
+            "num_opassedfips": self.num_opassedfips,
+            "num_ofailedfips": self.num_ofailedfips,
             "parallelism": parallelism,
             "results": [r for r in self._results]
         }

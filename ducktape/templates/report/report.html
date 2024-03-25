@@ -14,6 +14,8 @@
     <div id="flaky_test_panel"></div>
     <div id="opassed_test_panel"></div>
     <div id="ofailed_test_panel"></div>
+    <div id="opassedfips_test_panel"></div>
+    <div id="ofailedfips_test_panel"></div>
     <div id="passed_test_panel"></div>
     <script type="text/jsx">
       /* This small block makes it possible to use React dev tools in the Chrome browser */
@@ -47,6 +49,8 @@
               <td colSpan='5' align='center'>{this.props.summary_prop.ignored}</td>
               <td colSpan='5' align='center'>{this.props.summary_prop.opassed}</td>
               <td colSpan='5' align='center'>{this.props.summary_prop.ofailed}</td>
+              <td colSpan='5' align='center'>{this.props.summary_prop.opassedfips}</td>
+              <td colSpan='5' align='center'>{this.props.summary_prop.ofailedfips}</td>
               <td colSpan='5' align='center'>{this.props.summary_prop.run_time}</td>
             </tr>
           );
@@ -66,6 +70,8 @@
                   <th colSpan='5' align='center'>Ignored</th>
                   <th colSpan='5' align='center'>OPassed</th>
                   <th colSpan='5' align='center'>OFailed</th>
+                  <th colSpan='5' align='center'>OPassedFIPS</th>
+                  <th colSpan='5' align='center'>OFailedFIPS</th>
                   <th colSpan='5' align='center'>Time</th>
                 </tr>
               </thead>
@@ -192,6 +198,8 @@
         "ignored": %(num_ignored)d,
         "opassed": %(num_opassed)d,
         "ofailed": %(num_ofailed)d,
+        "opassedfips": %(num_opassedfips)d,
+        "ofailedfips": %(num_ofailedfips)d,
         "run_time": '%(run_time)s'
       }];
       
@@ -209,6 +217,8 @@
       IGNORED_TESTS=[%(ignored_tests)s];
       OPASSED_TESTS=[%(opassed_tests)s];
       OFAILED_TESTS=[%(ofailed_tests)s];
+      OPASSEDFIPS_TESTS=[%(opassedfips_tests)s];
+      OFAILEDFIPS_TESTS=[%(ofailedfips_tests)s];
 
       React.render(<Heading heading={HEADING}/>, document.getElementById('heading'));
       React.render(<ColorKeyPanel test_status_names={COLOR_KEYS}/>, document.getElementById('color_key_panel'));
@@ -218,6 +228,8 @@
       React.render(<TestPanel title="Flaky Tests" tests={FLAKY_TESTS}/>, document.getElementById('flaky_test_panel'));
       React.render(<TestPanel title="OPassed Tests" tests={OPASSED_TESTS}/>, document.getElementById('opassed_test_panel'));
       React.render(<TestPanel title="OFailed Tests" tests={OFAILED_TESTS}/>, document.getElementById('ofailed_test_panel'));
+      React.render(<TestPanel title="OPassed FIPS Tests" tests={OPASSEDFIPS_TESTS}/>, document.getElementById('opassedfips_test_panel'));
+      React.render(<TestPanel title="OFailed FIPS Tests" tests={OFAILEDFIPS_TESTS}/>, document.getElementById('ofailedfips_test_panel'));
       React.render(<TestPanel title="Passed Tests" tests={PASSED_TESTS}/>, document.getElementById('passed_test_panel'));
     </script>
   </body>

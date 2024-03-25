@@ -26,7 +26,7 @@ import pkg_resources
 
 from ducktape.utils.terminal_size import get_terminal_size
 from ducktape.utils.util import ducktape_version
-from ducktape.tests.status import PASS, FAIL, IGNORE, FLAKY, OPASS, OFAIL
+from ducktape.tests.status import PASS, FAIL, IGNORE, FLAKY, OPASS, OFAIL, OPASSFIPS, OFAILFIPS
 from ducktape.json_serializable import DucktapeJSONEncoder
 
 
@@ -117,6 +117,8 @@ class SimpleSummaryReporter(SummaryReporter):
             "ignored:          %d" % self.results.num_ignored,
             "opassed:          %d" % self.results.num_opassed,
             "ofailed:          %d" % self.results.num_ofailed,
+            "opassedfips:      %d" % self.results.num_opassedfips,
+            "ofailedfips:      %d" % self.results.num_ofailedfips,
             "=" * self.width
         ]
 
@@ -130,6 +132,8 @@ class SimpleSummaryReporter(SummaryReporter):
         failed = []
         ofail = []
         opass = []
+        ofailfips = []
+        opassfips = []
         for result in self.results:
             if result.test_status == FAIL:
                 failed.append(result)
@@ -139,10 +143,14 @@ class SimpleSummaryReporter(SummaryReporter):
                 opass.append(result)
             elif result.test_status == OFAIL:
                 ofail.append(result)
+            elif result.test_status == OPASSFIPS:
+                opassfips.append(result)
+            elif result.test_status == OFAILFIPS:
+                ofailfips.append(result)
             else:
                 passed.append(result)
 
-        ordered_results = passed + ignored + failed + opass + ofail
+        ordered_results = passed + ignored + failed + opass + ofail + opassfips + ofailfips
 
         report_lines = \
             [SingleResultReporter(result).result_string() + "\n" + "-" * self.width for result in ordered_results]
@@ -205,9 +213,14 @@ class JUnitReporter(object):
                 testsuite['skipped'] += 1
             elif result.test_status == OFAIL:
                 testsuite['skipped'] += 1
+            elif result.test_status == OPASSFIPS:
+                testsuite['skipped'] += 1
+            elif result.test_status == OFAILFIPS:
+                testsuite['skipped'] += 1
 
         total = self.results.num_failed + self.results.num_ignored + self.results.num_ofailed + \
-            self.results.num_opassed + self.results.num_passed + self.results.num_flaky
+            self.results.num_opassed + self.results.num_passed + self.results.num_flaky + \
+            self.results.num_opassedfips + self.results.num_ofailedfips
         # Now start building XML document
         root = ET.Element('testsuites', attrib=dict(
             name="ducktape", time=str(self.results.run_time_seconds),
@@ -230,7 +243,7 @@ class JUnitReporter(object):
                     name=name, classname=test.cls_name, time=str(test.run_time_seconds),
                     status=str(test.test_status), assertions=""
                 ))
-                if test.test_status == FAIL or test.test_status == OFAIL:
+                if test.test_status == FAIL or test.test_status == OFAIL or test.test_status == OFAILFIPS:
                     xml_failure = ET.SubElement(xml_testcase, 'failure', attrib=dict(
                         message=test.summary.splitlines()[0]
                     ))
@@ -297,6 +310,8 @@ class HTMLSummaryReporter(SummaryReporter):
         flaky_result_string = []
         opassed_result_string = []
         ofailed_result_string = []
+        opassedfips_result_string = []
+        ofailedfips_result_string = []
 
         for result in self.results:
             json_string = json.dumps(self.format_result(result))
@@ -319,6 +334,12 @@ class HTMLSummaryReporter(SummaryReporter):
             elif result.test_status == OFAIL:
                 ofailed_result_string.append(json_string)
                 ofailed_result_string.append(",")
+            elif result.test_status == OPASSFIPS:
+                opassedfips_result_string.append(json_string)
+                opassedfips_result_string.append(",")
+            elif result.test_status == OFAILFIPS:
+                ofailedfips_result_string.append(json_string)
+                ofailedfips_result_string.append(",")
             else:
                 raise Exception("Unknown test status in report: {}".format(result.test_status.to_json()))
 
@@ -332,6 +353,8 @@ class HTMLSummaryReporter(SummaryReporter):
             'num_ignored': self.results.num_ignored,
             'num_opassed': self.results.num_opassed,
             'num_ofailed': self.results.num_ofailed,
+            'num_opassedfips': self.results.num_opassedfips,
+            'num_ofailedfips': self.results.num_ofailedfips,
             'run_time': format_time(self.results.run_time_seconds),
             'session': self.results.session_context.session_id,
             'passed_tests': "".join(passed_result_string),
@@ -340,8 +363,10 @@ class HTMLSummaryReporter(SummaryReporter):
             'ignored_tests': "".join(ignored_result_string),
             'ofailed_tests': "".join(ofailed_result_string),
             'opassed_tests': "".join(opassed_result_string),
+            'ofailedfips_tests': "".join(ofailedfips_result_string),
+            'opassedfips_tests': "".join(opassedfips_result_string),
             'test_status_names': ",".join(["\'%s\'" % str(status) for status in
-                                           [PASS, FAIL, IGNORE, FLAKY, OPASS, OFAIL]])
+                                           [PASS, FAIL, IGNORE, FLAKY, OPASS, OFAIL, OPASSFIPS, OFAILFIPS]])
         }
 
         html = template % args
