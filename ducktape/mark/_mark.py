@@ -503,12 +503,13 @@ def ok_to_fail_fips(*args, **kwargs):
 
         return False
 
-    if len(args) == 1 and len(kwargs) == 0 and running_fips():
+    if len(args) == 1 and len(kwargs) == 0:
         # this corresponds to the usage of the decorator with no arguments
         # @ok_to_fail_fips
         # def test_function:
         #  ...
-        Mark.mark(args[0], OkToFailFIPS())
+        if running_fips():
+            Mark.mark(args[0], OkToFailFIPS())
         return args[0]
 
 
