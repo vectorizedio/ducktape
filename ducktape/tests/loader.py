@@ -52,7 +52,7 @@ class TestLoader(object):
     """Class used to discover and load tests."""
 
     def __init__(self, session_context, logger, repeat=1, injected_args=None, cluster=None, subset=0, subsets=1,
-                 historical_report=None):
+                 historical_report=None, allow_empty_tests_list=False):
         self.session_context = session_context
         self.cluster = cluster
         assert logger is not None
@@ -74,6 +74,7 @@ class TestLoader(object):
         # A non-None value here means the loader will override the injected_args
         # in any discovered test, whether or not it is parametrized
         self.injected_args = injected_args
+        self.allow_empty_tests_list = allow_empty_tests_list
 
     def load(self, symbols, excluded_test_symbols=None):
         """
@@ -146,7 +147,9 @@ class TestLoader(object):
         # Sort to make sure we get a consistent order for when we create subsets
         all_test_context_list = sorted(all_test_context_list, key=attrgetter("test_id"))
         if not all_test_context_list:
-            raise LoaderException("No tests to run!")
+            if not self.allow_empty_tests_list:
+                raise LoaderException("No tests to run!")
+            self.logger.warn("No tests to run!")
         self.logger.debug("Discovered these tests: " + str(all_test_context_list))
         # Select the subset of tests.
         if self.historical_report:

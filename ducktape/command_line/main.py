@@ -131,7 +131,8 @@ def main():
 
     # Discover and load tests to be run
     loader = TestLoader(session_context, session_logger, repeat=args_dict["repeat"], injected_args=injected_args,
-                        subset=args_dict["subset"], subsets=args_dict["subsets"])
+                        subset=args_dict["subset"], subsets=args_dict["subsets"],
+                        allow_empty_tests_list=args_dict["allow_empty_tests_list"])
     try:
         tests = loader.load(args_dict["test_path"], excluded_test_symbols=args_dict['exclude'])
     except LoaderException as e:
