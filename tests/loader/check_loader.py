@@ -403,6 +403,15 @@ class CheckTestLoader(object):
         with pytest.raises(LoaderException, match='No tests to run'):
             loader.load(included)
 
+    def check_test_loader_allow_empty_tests_list(self):
+        loader = TestLoader(self.SESSION_CONTEXT, logger=Mock(), allow_empty_tests_list=True)
+        # parameter syntax is valid, but there is no such parameter defined in the test annotation in the code
+        included = [os.path.join(discover_dir(), 'test_decorated.py::TestMatrix.test_thing@{"x": 1,"y": "missing"}')]
+        try:
+            loader.load(included)
+        except LoaderException:
+            pytest.fail("Should not have raised the LoaderException exception")
+
     @pytest.mark.parametrize("symbol", [
         # no class
         'test_decorated.py::.test_thing'
