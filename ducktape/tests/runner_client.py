@@ -117,6 +117,7 @@ class RunnerClient(object):
         self.all_services = ServiceRegistry()
 
         num_runs = 0
+        produce_flaky_individual_reports = self.deflake_num > 1
 
         try:
             while test_status == FAIL and num_runs < self.deflake_num:
@@ -124,9 +125,23 @@ class RunnerClient(object):
                 self.log(logging.INFO, "on run {}/{}".format(num_runs, self.deflake_num))
                 start_time = time.time()
                 test_status, summary, data = self._do_run(num_runs)
+                stop_time = time.time()
                 # dump threads after the test is complete;
                 # if any thread is not terminated correctly by the test we'll see it here
                 self.dump_threads(f"Threads after {self.test_id} finished")
+                if produce_flaky_individual_reports:
+                    result = TestResult(
+                        self.test_context,
+                        num_runs,
+                        self.session_context,
+                        test_status,
+                        summary,
+                        data,
+                        start_time,
+                        stop_time)
+                    flaky_results_dir = os.path.abspath(os.path.join(result.results_dir, os.pardir))
+                    result.results_dir = os.path.join(flaky_results_dir, "deflakes", str(num_runs))
+                    result.report()
                 if test_status == PASS and num_runs > 1:
                     test_status = FLAKY
 
