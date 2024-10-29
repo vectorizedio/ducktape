@@ -314,6 +314,8 @@ class TestRunner(object):
             self._handle_finished(event)
         elif event["event_type"] == ClientEventFactory.LOG:
             self._handle_log(event)
+        elif event["event_type"] == ClientEventFactory.ADD_RESULT:
+            self._handle_add_result(event)
         else:
             raise RuntimeError("Received event with unknown event type: " + str(event))
 
@@ -328,6 +330,11 @@ class TestRunner(object):
     def _handle_log(self, event):
         self.receiver.send(self.event_response.log(event))
         self._log(event["log_level"], event["message"])
+
+    def _handle_add_result(self, event):
+        self.receiver.send(self.event_response.add_result(event))
+        result = event['result']
+        self.results.append(result)
 
     def _handle_finished(self, event):
         test_key = TestKey(event["test_id"], event["test_index"])

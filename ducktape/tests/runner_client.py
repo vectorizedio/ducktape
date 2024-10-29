@@ -117,7 +117,8 @@ class RunnerClient(object):
         self.all_services = ServiceRegistry()
 
         num_runs = 0
-        produce_flaky_individual_reports = self.deflake_num > 1
+        deflake_enabled = self.deflake_num > 1
+        results = []
 
         try:
             while test_status == FAIL and num_runs < self.deflake_num:
@@ -129,7 +130,7 @@ class RunnerClient(object):
                 # dump threads after the test is complete;
                 # if any thread is not terminated correctly by the test we'll see it here
                 self.dump_threads(f"Threads after {self.test_id} finished")
-                if produce_flaky_individual_reports:
+                if deflake_enabled:
                     result = TestResult(
                         self.test_context,
                         num_runs,
@@ -142,6 +143,9 @@ class RunnerClient(object):
                     flaky_results_dir = os.path.abspath(os.path.join(result.results_dir, os.pardir))
                     result.results_dir = os.path.join(flaky_results_dir, "deflakes", str(num_runs))
                     result.report()
+                    results.append(result)
+                    self.log(logging.INFO, "Data: %s" % str(result.data))
+
                 if test_status == PASS and num_runs > 1:
                     test_status = FLAKY
 
@@ -161,7 +165,11 @@ class RunnerClient(object):
             if num_runs > 1:
                 # for reporting purposes report all services
                 self.test_context.services = self.all_services
-            # for flaky tests, we report the start and end time of the successful run, and not the whole run period
+            # report all deflake executions except the last one that is handled in
+            # FINISHED event below
+            for i in range(len(results)-1):
+                results[i].test_status = test_status
+                self.send(self.message.add_result(result=results[i]))
             result = TestResult(
                 self.test_context,
                 self.test_index,
