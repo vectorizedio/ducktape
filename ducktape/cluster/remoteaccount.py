@@ -190,7 +190,15 @@ class RemoteAccount(HttpMixin):
         client = SSHClient()
         client.set_missing_host_key_policy(IgnoreMissingHostKeyPolicy())
 
-        self._log(logging.DEBUG, "ssh_config: %s" % str(self.ssh_config))
+        try:
+            ip = socket.gethostbyname(self.externally_routable_ip)
+        except socket.gaierror as e:
+            ip = None
+            self._log(logging.WARN,
+                      f"error resolving {self.externally_routable_ip}: {e}")
+
+        self._log(logging.DEBUG,
+                  f"ssh_config: {self.ssh_config}, external IP: {ip}")
 
         client.connect(
             hostname=self.ssh_config.hostname,
