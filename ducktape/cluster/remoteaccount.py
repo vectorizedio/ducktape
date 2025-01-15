@@ -638,14 +638,36 @@ class RemoteAccount(HttpMixin):
     @check_ssh
     def create_file(self, path, contents):
         """Create file at path, with the given contents.
-
         If the path already exists, it will be overwritten.
         """
         # TODO: what should semantics be if path exists? what actually happens if it already exists?
         # TODO: what happens if the base part of the path does not exist?
+        try:
+            self._log(logging.DEBUG,
+                      f"Let's create or overwrite file at: {path}")
+            
+            dir_path = os.path.dirname(path)
+            if dir_path:
+                self._log(logging.DEBUG,
+                          f"Checking if directory exists: {dir_path}")
+                os.makedirs(dir_path, exist_ok=True)
+                stat = os.statvfs(dir_path)
+                free_space = stat.f_frsize * stat.f_bavail
+                self._log(logging.DEBUG,
+                          f"File size: {len(contents)} bytes")
+                self._log(logging.DEBUG,
+                          f"Available disk space in {dir_path}: {free_space} bytes")
+                
+            with self.sftp_client.open(path, "w") as f:
+                self._log(logging.DEBUG, f"Opening file at: {path}")
+                f.write(contents)
+                self._log(logging.DEBUG,
+                          f"File written successfully to: {path}")
 
-        with self.sftp_client.open(path, "w") as f:
-            f.write(contents)
+        except Exception as e:
+            self._log(logging.ERROR,
+                      f"Failed to create or overwrite file at {path}: {e}")
+            raise
 
     _DEFAULT_PERMISSIONS = int('755', 8)
 
