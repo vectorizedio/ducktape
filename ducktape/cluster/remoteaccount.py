@@ -638,14 +638,59 @@ class RemoteAccount(HttpMixin):
     @check_ssh
     def create_file(self, path, contents):
         """Create file at path, with the given contents.
-
         If the path already exists, it will be overwritten.
         """
         # TODO: what should semantics be if path exists? what actually happens if it already exists?
         # TODO: what happens if the base part of the path does not exist?
+        node_reachable = False
+        disk_space = "Unknown"
+        
+        try:
+            self._log(logging.DEBUG,
+                      f"Let's create or overwrite file at: {path}")
 
-        with self.sftp_client.open(path, "w") as f:
-            f.write(contents)
+            with self.sftp_client.open(path, "w") as f:
+                f.write(contents)
+
+        except Exception as e:
+            self._log(logging.ERROR,
+                      f"Failed to create or overwrite file at {path}: {e}")
+            try:
+                node_reachable = self.available()
+                self._log(logging.DEBUG, f"Node is {'reachable' if node_reachable else 'not reachable'}")
+
+                dir_path = os.path.dirname(path)
+                if dir_path:
+                    if self.isdir(dir_path):
+                        self._log(logging.DEBUG, f"Remote directory exists: {dir_path}")
+                        try:
+                            disk_space = self._get_remote_disk_space(dir_path)
+                            self._log(logging.DEBUG, f"Available disk space: {disk_space} bytes")
+                            self._log(logging.DEBUG, f"File size: {len(contents)} bytes")
+                        except Exception as disk_error:
+                            self._log(logging.ERROR, f"Failed to retrieve disk space: {disk_error}")
+                    else:
+                        self._log(logging.ERROR, f"Remote directory does not exist: {dir_path}")            
+                else:
+                    self._log(logging.ERROR, "No parent directory to validate")
+                
+            except Exception as debug_error:
+                self._log(logging.ERROR, f"Debugging failed: {debug_error}")
+                    
+            raise Exception(
+                f"Node reachable={node_reachable}"
+                f"Available disk space: {disk_space} bytes"
+                f"Original Error: {e}"
+            ) from e
+
+    def _get_remote_disk_space(self, dir_path):
+        """Check available disk space on the remote system."""
+        try:
+            cmd = f"df -k {dir_path} | tail -1 | awk '{{print $4}}'"
+            output = self.ssh_output(cmd, allow_fail=False).strip()
+            return int(output) * 1024
+        except Exception as e:
+            raise Exception(f"Failed to retrieve disk space for {dir_path}: {e}")
 
     _DEFAULT_PERMISSIONS = int('755', 8)
 
